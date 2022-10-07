@@ -12,19 +12,32 @@ GPIO.setup(LED_PIN,GPIO.OUT)
 
 def update_led_output():
     GPIO.output(LED_PIN, 0 if LED_STATE_ON else 1)
+    print("LED is turned", "ON" if LED_STATE_ON else "OFF")
 
 PAGE="""\
 <html>
 <head>
 <title>ULUG Yocto Demo</title>
+<script>
+function on() {
+document.getElementById("state").innerText = "ON";
+fetch("/on");
+}
+function off() {
+document.getElementById("state").innerText = "OFF";
+fetch("/off");
+}
+</script>
 </head>
 <body>
 <h1>ULUG Yocto Demo</h1>
-<p> LED is: <b>{}</b> </p>
+<table><tr>
+<td>LED is:</td> <td id="state" style="font-weight: bold">{LED_STATE_PLACEHOLDER}</td>
+</tr>
+<table>
 <p> Turn LED:
-<button onclick="location.href='/on'" type="button">On</button>
-&nbsp
-<button onclick="location.href='/off'" type="button">Off</button>
+<button onclick="on()" type="button">On</button>
+<button onclick="off()" type="button">Off</button>
 </p>
 </body>
 </html>
@@ -40,17 +53,16 @@ class MyHandler(BaseHTTPRequestHandler):
 
         self.do_HEAD()
 
-        if self.path=='/':
-            pass
-        elif self.path=='/on':
+        if self.path=='/on':
             LED_STATE_ON=True
+            update_led_output()
         elif self.path=='/off':
             LED_STATE_ON=False
-        update_led_output()
+            update_led_output()
+        else:
+            content = PAGE.replace('{LED_STATE_PLACEHOLDER}', 'ON' if LED_STATE_ON else 'OFF').encode('utf-8')
+            self.wfile.write(content)
 
-        content = PAGE.format('ON' if LED_STATE_ON else 'OFF',
-                              'ON' if LED_STATE_ON else 'OFF').encode('utf-8')
-        self.wfile.write(content)
 
 class MyServer(socketserver.ThreadingMixIn, HTTPServer):
     allow_reuse_address = True
