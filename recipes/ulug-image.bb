@@ -1,4 +1,4 @@
 
-require recipes-core/images/core-image-minimal.bb
+require recipes-core/images/core-image-base.bb
 
 IMAGE_INSTALL += " demoapp"
